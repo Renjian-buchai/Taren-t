@@ -1,7 +1,11 @@
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include "split.hh"
 
 enum class flag {};
 
@@ -25,15 +29,26 @@ int main(int argc, const char** argv, const char** envp [[maybe_unused]]) {
   if (arguments[0] == "h" || arguments[0] == "H") {
     // help
     std::cout << "help";
+    return 0;
   }
 
   if (arguments[0] == "v" || arguments[0] == "V") {
     // version
     std::cout << "version";
+    return 0;
   }
 
+  if (arguments.size() < 2) {
+    std::cout << "Invalid usage.\n"
+                 "For more detailed help, please use:\n"
+                 "  `tarent h`\n";
+    return 1;
+  }
+
+  std::filesystem::path path = arguments[1];
+
   if (arguments[0] == "s" || arguments[0] == "S") {
-    // split
+    split(path, flags);
     std::cout << "Split";
   }
 
