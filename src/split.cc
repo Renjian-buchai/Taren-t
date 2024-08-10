@@ -4,6 +4,7 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <string>
 
 splitError split(const std::filesystem::path& file, std::vector<bool>& flags) {
   (void)flags;
@@ -17,17 +18,39 @@ splitError split(const std::filesystem::path& file, std::vector<bool>& flags) {
     return splitError::ACCESS;
   }
 
-  char buffer[1'000'000];
-  input.seekg(0, std::ios_base::end);
+  std::filesystem::path newName = file.filename();
+  char* buffer = new char[1'000'000];
+  size_t index = 0;
+
+  input.seekg(std::ios_base::beg, std::ios_base::end);
   size_t length = input.tellg();
-  for (size_t i = 0; i < length / 25'000'000; ++i) {
-    // Create the new files and run that logic
-    // Loop through the bytes 1'000'000 bytes at once, then write to new file
+  input.seekg(std::ios_base::beg);
+  for (; index < length / 25'000'000; ++index) {
+    std::ofstream output(
+        file.parent_path() / std::filesystem::path(newName.string() + "." +
+                                                   std::to_string(index + 1)),
+        std::ios_base::out | std::ios_base::binary);
+
+    for (int i = 0; i < 25; ++i) {
+      input.read(buffer, 1'000'000);
+      output.write(buffer, 1'000'000);
+    }
   }
 
-  // Create the last new file, and run that logic
-  // Loop thorough the bytes 1'000'000 bytes at once, until the last 1'000'000
-  // bytes, then just return
+  std::ofstream output(
+      file.parent_path() / std::filesystem::path(newName.string() + "." +
+                                                 std::to_string(index + 1)),
+      std::ios_base::out | std::ios_base::binary);
+
+  for (size_t i = 0; i < (length % 25'000'000) / 1'000'000; ++i) {
+    input.read(buffer, 1'000'000);
+    output.write(buffer, 1'000'000);
+  }
+
+  if (length % 1'000'000) {
+    input.read(buffer, length % 1'000'000);
+    output.write(buffer, length % 1'000'000);
+  }
 
   return splitError::SUCCESS;
 }
