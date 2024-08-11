@@ -27,8 +27,9 @@ splitError split(const std::filesystem::path& file, std::vector<bool>& flags) {
   input.seekg(std::ios_base::beg);
   for (; index < length / 25'000'000; ++index) {
     std::ofstream output(
-        file.parent_path() / std::filesystem::path(newName.string() + "." +
-                                                   std::to_string(index + 1)),
+        file.parent_path() /
+            std::filesystem::path(newName.string() + ".taren" +
+                                  std::to_string(index + 1) + "t"),
         std::ios_base::out | std::ios_base::binary);
 
     for (int i = 0; i < 25; ++i) {
@@ -38,8 +39,9 @@ splitError split(const std::filesystem::path& file, std::vector<bool>& flags) {
   }
 
   std::ofstream output(
-      file.parent_path() / std::filesystem::path(newName.string() + "." +
-                                                 std::to_string(index + 1)),
+      file.parent_path() /
+          std::filesystem::path(newName.string() + ".taren" +
+                                std::to_string(index + 1) + "t"),
       std::ios_base::out | std::ios_base::binary);
 
   for (size_t i = 0; i < (length % 25'000'000) / 1'000'000; ++i) {
