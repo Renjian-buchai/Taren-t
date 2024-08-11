@@ -9,9 +9,10 @@ enum splitError : int8_t {
   ACCESS = -2,
   DNE = -1,
   SUCCESS = 0,
+  EXISTS,
 };
 
 splitError split(const std::filesystem::path& activeFile,
-                 std::vector<bool>& flags);
+                 const std::vector<bool>& flags);
 
 #endif

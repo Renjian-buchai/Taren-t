@@ -6,7 +6,8 @@
 #include <iostream>
 #include <string>
 
-splitError split(const std::filesystem::path& file, std::vector<bool>& flags) {
+splitError split(const std::filesystem::path& file,
+                 const std::vector<bool>& flags) {
   (void)flags;
 
   if (!std::filesystem::exists(file)) {
@@ -22,15 +23,22 @@ splitError split(const std::filesystem::path& file, std::vector<bool>& flags) {
   char* buffer = new char[1'000'000];
   size_t index = 0;
 
-  input.seekg(std::ios_base::beg, std::ios_base::end);
-  size_t length = input.tellg();
-  input.seekg(std::ios_base::beg);
-  for (; index < length / 25'000'000; ++index) {
-    std::ofstream output(
-        file.parent_path() /
-            std::filesystem::path(newName.string() + ".taren" +
-                                  std::to_string(index + 1) + "t"),
-        std::ios_base::out | std::ios_base::binary);
+  size_t length;
+  /* Find length of file */ {
+    input.seekg(std::ios_base::beg, std::ios_base::end);
+    length = input.tellg();
+    input.seekg(std::ios_base::beg);
+  }
+
+  for (auto newFile = file.parent_path() /
+                      std::filesystem::path(newName.string() + ".taren" +
+                                            std::to_string(index + 1) + "t");
+       index < length / 25'000'000; ++index) {
+    if (std::filesystem::exists(newFile)) {
+      return splitError::EXISTS;
+    }
+
+    std::ofstream output(newFile, std::ios_base::out | std::ios_base::binary);
 
     for (int i = 0; i < 25; ++i) {
       input.read(buffer, 1'000'000);

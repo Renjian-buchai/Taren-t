@@ -48,8 +48,27 @@ int main(int argc, const char** argv, const char** envp [[maybe_unused]]) {
   std::filesystem::path path = arguments[1];
 
   if (arguments[0] == "s" || arguments[0] == "S") {
-    split(path, flags);
-    std::cout << "Split";
+    switch (split(path, flags)) {
+      case splitError::ACCESS:
+        std::cerr << "Access denied; Unable to open file.\n"
+                     "Please ensure you have read permissions to the file\n";
+        break;
+
+      case splitError::DNE:
+        std::cerr << "File does not exist.\n"
+                     "Please check your spelling\n";
+        break;
+
+      case splitError::EXISTS:
+        std::cerr << "The last file created already exists.\n"
+                     "Please clean up manually\n";
+        break;
+
+      case splitError::SUCCESS:
+        [[fallthrough]];
+      default:
+        break;
+    }
   }
 
   if (arguments[0] == "a" || arguments[0] == "A") {
