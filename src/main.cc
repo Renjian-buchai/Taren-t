@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "amalagamate.hh"
 #include "split.hh"
 
 enum class flag {};
@@ -73,6 +74,7 @@ int main(int argc, const char** argv, const char** envp [[maybe_unused]]) {
 
   if (arguments[0] == "a" || arguments[0] == "A") {
     // amalgamate
+    amalgamate(path, flags);
     std::cout << "Amalgamate";
   }
 
