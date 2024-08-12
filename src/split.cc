@@ -35,7 +35,7 @@ splitError split(const std::filesystem::path& file,
   for (auto newFile = file.parent_path() /
                       std::filesystem::path(newName.string() + ".taren" +
                                             std::to_string(index + 1) + "t");
-       index < length / 25'000'000; ++index) {
+       index < max - 1; ++index) {
     if (std::filesystem::exists(newFile)) {
       delete[] buffer;
       return splitError::EXISTS;

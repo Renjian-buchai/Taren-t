@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 #include <regex>
 #include <utility>
 
@@ -10,7 +11,7 @@ amalError amalgamate(const std::filesystem::path& file,
 
   std::vector<std::pair<std::filesystem::path, size_t>> matches;
 
-  std::regex regex(file.string() + R"regex(\.taren(\d+)t)regex");
+  static const std::regex regex(file.string() + R"regex(\.taren(\d+)t)regex");
   std::string result;
   std::string filename;
   std::smatch index;
@@ -40,11 +41,13 @@ amalError amalgamate(const std::filesystem::path& file,
 
   std::ifstream input(matches[0].first);
   std::string buffer;
-  // std::getline(input, buffer, '.');
-  // size_t version = std::stoull(buffer);
+  std::getline(input, buffer, '.');
+  size_t version = std::stoull(buffer);
 
-  // std::getline(input, buffer, '.');
-  // size_t fragments = std::stoull(buffer);
+  std::getline(input, buffer, '.');
+  size_t fragments = std::stoull(buffer);
+
+  std::cout << "v" << version << ", " << fragments << " parts\n";
 
   std::sort(matches.begin(), matches.end(), [](auto thing1, auto thing2) {
     return thing1.second < thing2.second;
