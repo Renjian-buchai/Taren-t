@@ -7,7 +7,8 @@
 #include "amalagamate.hh"
 
 amalError amalgamate(const std::filesystem::path& file,
-                     const std::vector<bool>& flags) {
+                     const std::vector<bool>& flags,
+                     std::vector<size_t>& problems) {
   (void)flags;
 
   std::vector<std::pair<std::filesystem::path, size_t>> matches;
@@ -36,7 +37,7 @@ amalError amalgamate(const std::filesystem::path& file,
             extension.substr(6, extension.size() - 7));
 
         matches.push_back({entry.path(), index});
-      } catch (boost::bad_lexical_cast& _ [[maybe_unused]]) {
+      } catch (boost::bad_lexical_cast& _) {
         std::cout << _.what() << "\n";
         continue;
       }
@@ -44,25 +45,35 @@ amalError amalgamate(const std::filesystem::path& file,
   }
 
   if (matches.empty()) {
-    return amalError::NOSUCHTARENTS;
+    return amalError::NOsUCHtARENTS;
   }
-
-  std::ifstream input(matches[0].first);
-  std::string buffer;
-  std::getline(input, buffer, '.');
-  size_t version = std::stoull(buffer);
-
-  std::getline(input, buffer, '.');
-  size_t fragments = std::stoull(buffer);
-
-  std::cout << "v" << version << ", " << fragments << " parts\n";
 
   std::sort(matches.begin(), matches.end(), [](auto thing1, auto thing2) {
     return thing1.second < thing2.second;
   });
 
-  for (auto [it, jt] : matches) {
-    std::cout << it << " " << jt << "\n";
+  std::ifstream input(matches[0].first);
+  std::string buffer;
+
+  size_t version;
+  size_t fragments;
+  try {
+    std::getline(input, buffer, '.');
+    version = boost::lexical_cast<uint64_t>(buffer);
+
+    std::getline(input, buffer, '.');
+    fragments = boost::lexical_cast<uint64_t>(buffer);
+  } catch (boost::bad_lexical_cast& _) {
+    std::cerr << _.what() << " in file: " << matches[0].second << "\n";
+    return amalError::BADhEADER;
+  }
+
+  std::cout << "v" << version << ", " << fragments << " parts\n";
+
+  for (size_t i = 0; i < fragments; ++i) {
+    if (matches[i].second != i + 1) {
+      problems.push_back(i + 1);
+    }
   }
 
   return amalError::SUCCESS;

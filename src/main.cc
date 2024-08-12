@@ -66,7 +66,9 @@ int main(int argc, const char** argv, const char** envp [[maybe_unused]]) {
         break;
 
       case splitError::SUCCESS:
-        [[fallthrough]];
+        std::cout << "Success\n";
+        break;
+
       default:
         break;
     }
@@ -75,7 +77,6 @@ int main(int argc, const char** argv, const char** envp [[maybe_unused]]) {
   if (arguments[0] == "a" || arguments[0] == "A") {
     // amalgamate
     amalgamate(path, flags);
-    std::cout << "Amalgamate";
   }
 
   return 0;
