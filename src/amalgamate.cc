@@ -1,3 +1,4 @@
+#include <boost/lexical_cast.hpp>
 #include <fstream>
 #include <iostream>
 #include <regex>
@@ -11,10 +12,9 @@ amalError amalgamate(const std::filesystem::path& file,
 
   std::vector<std::pair<std::filesystem::path, size_t>> matches;
 
-  static const std::regex regex(file.string() + R"regex(\.taren(\d+)t)regex");
   std::string result;
-  std::string filename;
-  std::smatch index;
+  std::string extension;
+  size_t index;
 
   // Find files that match
   for (std::filesystem::directory_entry entry :
@@ -28,10 +28,18 @@ amalError amalgamate(const std::filesystem::path& file,
       continue;
     }
 
-    // Regex can't match temporary strings so fuck
-    filename = entry.path().filename().string();
-    if (std::regex_match(filename, index, regex)) {
-      matches.push_back({entry.path(), std::stoull(index[1])});
+    extension = entry.path().extension().string();
+
+    if (extension.substr(0, 6) == ".taren" && extension.back() == 't') {
+      try {
+        index = boost::lexical_cast<size_t>(
+            extension.substr(6, extension.size() - 7));
+
+        matches.push_back({entry.path(), index});
+      } catch (boost::bad_lexical_cast& _ [[maybe_unused]]) {
+        std::cout << _.what() << "\n";
+        continue;
+      }
     }
   }
 
@@ -52,6 +60,10 @@ amalError amalgamate(const std::filesystem::path& file,
   std::sort(matches.begin(), matches.end(), [](auto thing1, auto thing2) {
     return thing1.second < thing2.second;
   });
+
+  for (auto [it, jt] : matches) {
+    std::cout << it << " " << jt << "\n";
+  }
 
   return amalError::SUCCESS;
 }
