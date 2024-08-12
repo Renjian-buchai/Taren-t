@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <vector>
 
-enum splitError : int8_t {
+enum class splitError : int8_t {
   ACCESS = -2,
   DNE = -1,
   SUCCESS = 0,

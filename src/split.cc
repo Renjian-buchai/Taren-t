@@ -30,15 +30,20 @@ splitError split(const std::filesystem::path& file,
     input.seekg(std::ios_base::beg);
   }
 
+  size_t max = (length / 25'000'000) + 1;
+
   for (auto newFile = file.parent_path() /
                       std::filesystem::path(newName.string() + ".taren" +
                                             std::to_string(index + 1) + "t");
        index < length / 25'000'000; ++index) {
     if (std::filesystem::exists(newFile)) {
+      delete[] buffer;
       return splitError::EXISTS;
     }
 
     std::ofstream output(newFile, std::ios_base::out | std::ios_base::binary);
+
+    output << "1." << max << ".";
 
     for (int i = 0; i < 25; ++i) {
       input.read(buffer, 1'000'000);
@@ -52,6 +57,8 @@ splitError split(const std::filesystem::path& file,
                                 std::to_string(index + 1) + "t"),
       std::ios_base::out | std::ios_base::binary);
 
+  output << "1." << max;
+
   for (size_t i = 0; i < (length % 25'000'000) / 1'000'000; ++i) {
     input.read(buffer, 1'000'000);
     output.write(buffer, 1'000'000);
@@ -62,5 +69,6 @@ splitError split(const std::filesystem::path& file,
     output.write(buffer, length % 1'000'000);
   }
 
+  delete[] buffer;
   return splitError::SUCCESS;
 }
