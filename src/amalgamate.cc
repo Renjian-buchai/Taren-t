@@ -1,10 +1,10 @@
+#include "amalgamate.hh"
+
 #include <boost/lexical_cast.hpp>
 #include <fstream>
 #include <iostream>
 #include <regex>
 #include <utility>
-
-#include "amalagamate.hh"
 
 static amalError validate(std::ifstream& input, char* buffer,
                           size_t& fileVersion, size_t& fileFragments,
