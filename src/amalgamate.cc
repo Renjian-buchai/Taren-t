@@ -126,10 +126,13 @@ amalError amalgamate(const std::filesystem::path& file,
       return amalError::INCONSISTENThEADERS;
     }
 
+    input.read(buffer, 1);
+
     for (size_t j = 0; j < 25; ++j) {
       input.read(buffer, 1'000'000);
       output.write(buffer, 1'000'000);
     }
+    input.close();
   }
 
   input.open(matches.back().first);
