@@ -20,7 +20,7 @@ splitError split(const std::filesystem::path& file,
   }
 
   std::filesystem::path newName = file.filename();
-  char* buffer = new char[1'000'000];
+  char* buffer = new char[1'000'001];
   size_t index = 0;
 
   size_t length;
