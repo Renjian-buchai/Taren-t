@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "amalagamate.hh"
+#include "amalgamate.hh"
 #include "split.hh"
 
 enum class flag {};
