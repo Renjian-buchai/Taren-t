@@ -9,6 +9,8 @@ enum class amalError : int8_t {
   NOsUCHtARENTS = -1,
   SUCCESS = 0,
   BADhEADER,
+  FILEcOUNT,
+  INCONSISTENThEADERS,
 };
 
 amalError amalgamate(const std::filesystem::path& filename,

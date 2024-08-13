@@ -74,9 +74,11 @@ int main(int argc, const char** argv, const char** envp [[maybe_unused]]) {
     }
   }
 
+  std::vector<size_t> problems;
+
   if (arguments[0] == "a" || arguments[0] == "A") {
     // amalgamate
-    amalgamate(path, flags);
+    amalgamate(path, flags, problems);
   }
 
   return 0;

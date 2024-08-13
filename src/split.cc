@@ -26,7 +26,7 @@ splitError split(const std::filesystem::path& file,
   size_t length;
   /* Find length of file */ {
     input.seekg(std::ios_base::beg, std::ios_base::end);
-    length = input.tellg();
+    length = static_cast<size_t>(input.tellg());
     input.seekg(std::ios_base::beg);
   }
 
@@ -57,7 +57,7 @@ splitError split(const std::filesystem::path& file,
                                 std::to_string(index + 1) + "t"),
       std::ios_base::out | std::ios_base::binary);
 
-  output << "1." << max;
+  output << "1." << max << ".";
 
   for (size_t i = 0; i < (length % 25'000'000) / 1'000'000; ++i) {
     input.read(buffer, 1'000'000);
@@ -65,8 +65,8 @@ splitError split(const std::filesystem::path& file,
   }
 
   if (length % 1'000'000) {
-    input.read(buffer, length % 1'000'000);
-    output.write(buffer, length % 1'000'000);
+    input.read(buffer, static_cast<std::streamsize>(length % 1'000'000));
+    output.write(buffer, static_cast<std::streamsize>(length % 1'000'000));
   }
 
   delete[] buffer;

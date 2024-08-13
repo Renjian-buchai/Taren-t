@@ -6,6 +6,25 @@
 
 #include "amalagamate.hh"
 
+static amalError validate(std::ifstream& input, char* buffer,
+                          size_t& fileVersion, size_t& fileFragments,
+                          const size_t fragmentNumber) {
+  try {
+    input.getline(buffer, 5, '.');
+    fileVersion = boost::lexical_cast<uint64_t>(buffer);
+
+    // uint64_t is 20 digits long at max, in decimal
+    // log_10(2^64) ~= 19.265
+    input.getline(buffer, 20, '.');
+    fileFragments = boost::lexical_cast<uint64_t>(buffer);
+  } catch (boost::bad_lexical_cast& _) {
+    std::cerr << _.what() << " in file: " << fragmentNumber << "\n";
+    return amalError::BADhEADER;
+  }
+
+  return amalError::SUCCESS;
+}
+
 amalError amalgamate(const std::filesystem::path& file,
                      const std::vector<bool>& flags,
                      std::vector<size_t>& problems) {
@@ -52,29 +71,86 @@ amalError amalgamate(const std::filesystem::path& file,
     return thing1.second < thing2.second;
   });
 
-  std::ifstream input(matches[0].first);
-  std::string buffer;
-
   size_t version;
   size_t fragments;
-  try {
-    std::getline(input, buffer, '.');
-    version = boost::lexical_cast<uint64_t>(buffer);
+  {
+    std::ifstream input(matches[0].first);
+    char buffer[20];
 
-    std::getline(input, buffer, '.');
-    fragments = boost::lexical_cast<uint64_t>(buffer);
-  } catch (boost::bad_lexical_cast& _) {
-    std::cerr << _.what() << " in file: " << matches[0].second << "\n";
-    return amalError::BADhEADER;
-  }
-
-  std::cout << "v" << version << ", " << fragments << " parts\n";
-
-  for (size_t i = 0; i < fragments; ++i) {
-    if (matches[i].second != i + 1) {
-      problems.push_back(i + 1);
+    if ((validate(input, buffer, version, fragments, matches[0].second)) !=
+        amalError::SUCCESS) {
+      return amalError::BADhEADER;
     }
   }
+
+  for (size_t i = 0; i < fragments && i < matches.size(); ++i) {
+    if (matches[i].second != i + 1) {
+      problems.push_back(i + 1);
+      i--;
+      continue;
+    }
+  }
+
+  for (size_t i = matches.back().second + 1; i < fragments; ++i) {
+    problems.push_back(i);
+  }
+
+  if (!problems.empty()) {
+    return amalError::FILEcOUNT;
+  }
+
+  char* buffer = new char[1'000'000];
+
+  std::ifstream input;
+  std::ofstream output(file.string() + ".out",
+                       std::ios_base::binary | std::ios_base::out);
+  for (size_t i = 0, fileVersion = 0, fileFragments = 0; i < matches.size() - 1;
+       ++i) {
+    auto [path, number] = matches[i];
+    input.open(path, std::ios_base::binary | std::ios_base::in);
+    char gayBuffer[20] = {0};
+
+    // Checks for header consistency whilst also removing the header
+    if (validate(input, gayBuffer, fileVersion, fileFragments,
+                 matches[i].second) != amalError::SUCCESS) {
+      return amalError::BADhEADER;
+    }
+
+    if (fileVersion != version && fileFragments != fragments) {
+      std::cout << "Headers inconsistent between files: \n"
+                   "  "
+                << matches[0].first.filename()
+                << ",\n"
+                   "  "
+                << matches[i].first.filename() << "\n";
+      return amalError::INCONSISTENThEADERS;
+    }
+
+    for (size_t j = 0; j < 25; ++j) {
+      input.read(buffer, 1'000'000);
+      output.write(buffer, 1'000'000);
+    }
+  }
+
+  input.open(matches.back().first);
+
+  char headerBuffer[20] = {0};
+  if (validate(input, headerBuffer, version, fragments,
+               matches.back().second) != amalError::SUCCESS) {
+    return amalError::INCONSISTENThEADERS;
+  }
+
+  input.seekg(std::ios_base::beg, std::ios_base::end);
+  size_t length = static_cast<size_t>(input.tellg());
+  input.seekg(std::ios_base::beg);
+
+  for (size_t i = 0; i < length / 1'000'000; ++i) {
+    input.read(buffer, 1'000'000);
+    output.write(buffer, 1'000'000);
+  }
+
+  input.read(buffer, static_cast<std::streamsize>(length % 1'000'000));
+  output.write(buffer, static_cast<std::streamsize>(length % 1'000'000));
 
   return amalError::SUCCESS;
 }
